@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+/* ===== Custom Theme & Design Tokens ===== */
+@theme {
+  --color-iron-900: #0a0a0f;
+  --color-iron-800: #111118;
+  --color-iron-700: #1a1a24;
+  --color-iron-600: #252533;
+  --color-iron-500: #3a3a4e;
+  --color-iron-400: #5a5a72;
+  --color-iron-300: #8888a0;
+  --color-iron-200: #b8b8cc;
+  --color-iron-100: #e0e0ec;
+
+  --color-fire-500: #f97316;
+  --color-fire-400: #fb923c;
+  --color-fire-600: #ea580c;
+
+  --color-pump-500: #a855f7;
+  --color-pump-400: #c084fc;
+
+  --color-energy-500: #22d3ee;
+  --color-energy-400: #67e8f9;
+
+  --color-success-500: #22c55e;
+  --color-success-400: #4ade80;
+
+  --color-danger-500: #ef4444;
+  --color-danger-400: #f87171;
+
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Outfit', 'Inter', system-ui, sans-serif;
+}
+
+/* ===== Base Styles ===== */
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: var(--font-body);
+    background-color: var(--color-iron-900);
+    color: var(--color-iron-100);
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  #root {
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  input,
+  textarea,
+  select {
+    font-family: inherit;
+  }
+
+  /* Number input — hide spinners */
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type='number'] {
+    -moz-appearance: textfield;
+  }
+}
