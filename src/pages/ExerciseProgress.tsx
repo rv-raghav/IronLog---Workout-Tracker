@@ -5,13 +5,12 @@ import { useWorkoutStore } from '../app/store';
 interface ExerciseSession {
   date: string;
   displayDate: string;
-  workoutDay: string; // e.g. "Lat Pulldown, Seated Row, ..." to identify which workout
+  workoutDay: string;
   sets: { weight: number; reps: number }[];
   bestSet: { weight: number; reps: number };
   totalVolume: number;
 }
 
-/** All sessions grouped by exercise name */
 type ExerciseHistory = Record<string, ExerciseSession[]>;
 
 export default function ExerciseProgress() {
@@ -22,7 +21,6 @@ export default function ExerciseProgress() {
     loadFromStorage();
   }, [loadFromStorage]);
 
-  // Group all exercises by name across all workouts
   const exerciseHistory = useMemo<ExerciseHistory>(() => {
     const history: ExerciseHistory = {};
 
@@ -31,7 +29,7 @@ export default function ExerciseProgress() {
         .map((e) => e.name)
         .filter(Boolean)
         .slice(0, 3)
-        .join(', ');
+        .join(' · ');
 
       for (const exercise of workout.exercises) {
         if (!exercise.name) continue;
@@ -49,10 +47,10 @@ export default function ExerciseProgress() {
 
         history[name].push({
           date: workout.date,
-          displayDate: new Date(workout.date + 'T00:00:00').toLocaleDateString(
-            'en-US',
-            { month: 'short', day: 'numeric' }
-          ),
+          displayDate: new Date(workout.date + 'T00:00:00').toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+          }),
           workoutDay: workoutDay || 'Workout',
           sets: exercise.sets,
           bestSet,
@@ -61,7 +59,6 @@ export default function ExerciseProgress() {
       }
     }
 
-    // Sort each exercise's sessions by date (newest first)
     for (const name of Object.keys(history)) {
       history[name].sort(
         (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
@@ -71,15 +68,13 @@ export default function ExerciseProgress() {
     return history;
   }, [workouts]);
 
-  // All exercise names sorted alphabetically
   const exerciseNames = useMemo(
     () => Object.keys(exerciseHistory).sort(),
     [exerciseHistory]
   );
 
-  // Calculate diff between consecutive sessions
   function getVolumeDiff(sessions: ExerciseSession[], index: number): number | null {
-    if (index >= sessions.length - 1) return null; // no previous session to compare
+    if (index >= sessions.length - 1) return null;
     const current = sessions[index].totalVolume;
     const previous = sessions[index + 1].totalVolume;
     if (previous === 0) return null;
@@ -96,47 +91,48 @@ export default function ExerciseProgress() {
     : [];
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-display font-bold text-iron-100">
-        📈 Exercise Progress
-      </h1>
-      <p className="text-sm text-iron-400">
-        Compare the same exercise across different workout days — see how your
-        Lat Pulldowns, Seated Rows, etc. progress over time.
-      </p>
+    <div className="page-enter space-y-6 bg-pattern min-h-full">
+      <div>
+        <h1 className="text-2xl font-display font-bold text-gradient-hero">
+          Exercise Progress
+        </h1>
+        <p className="text-xs text-iron-500 mt-1">
+          Compare the same exercise across different workout days 📈
+        </p>
+      </div>
 
       {exerciseNames.length === 0 ? (
-        <div className="text-center py-16">
-          <p className="text-5xl mb-4">📭</p>
-          <p className="text-iron-400 text-sm">
-            No workout data yet. Complete a workout to see progress here.
-          </p>
+        <div className="text-center py-16 card-enter">
+          <div className="w-20 h-20 mx-auto mb-4 rounded-3xl glass border-gradient flex items-center justify-center">
+            <span className="text-4xl">📈</span>
+          </div>
+          <p className="text-iron-300 text-sm font-medium">No data yet</p>
+          <p className="text-iron-500 text-xs mt-1">Complete workouts to track exercise progress.</p>
         </div>
       ) : (
         <>
           {/* Exercise selector grid */}
-          <div className="space-y-2">
-            <label className="text-sm text-iron-300 font-medium">
+          <div className="space-y-2.5">
+            <label className="text-[10px] text-iron-500 font-semibold uppercase tracking-[0.15em] flex items-center gap-2">
+              <span className="w-1 h-4 rounded-full bg-fire-500/50" />
               Select an exercise
             </label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2 stagger-children">
               {exerciseNames.map((name) => {
                 const sessions = exerciseHistory[name];
                 const isSelected = selectedExercise === name;
                 return (
                   <button
                     key={name}
-                    onClick={() =>
-                      setSelectedExercise(isSelected ? null : name)
-                    }
-                    className={`text-left px-3 py-3 rounded-xl border text-sm transition-all duration-200 ${
+                    onClick={() => setSelectedExercise(isSelected ? null : name)}
+                    className={`text-left px-3.5 py-3 rounded-xl border text-sm transition-all duration-300 press ${
                       isSelected
-                        ? 'bg-fire-500/15 border-fire-500/50 text-fire-400'
-                        : 'bg-iron-800 border-iron-600/40 text-iron-200 hover:border-iron-500'
+                        ? 'glass border-fire-500/30 text-fire-400 glow-fire'
+                        : 'glass border-white/[0.04] text-iron-200 hover:border-white/[0.08]'
                     }`}
                   >
-                    <span className="font-medium block truncate">{name}</span>
-                    <span className="text-xs text-iron-500 mt-0.5 block">
+                    <span className="font-semibold block truncate text-[13px]">{name}</span>
+                    <span className="text-[10px] text-iron-500 mt-0.5 block uppercase tracking-wider">
                       {sessions.length} session{sessions.length !== 1 ? 's' : ''}
                     </span>
                   </button>
@@ -147,16 +143,17 @@ export default function ExerciseProgress() {
 
           {/* Selected exercise history */}
           {selectedExercise && selectedHistory.length > 0 && (
-            <div className="space-y-4">
-              <h2 className="text-lg font-display font-semibold text-iron-100 flex items-center gap-2">
-                💪 {selectedExercise}
-                <span className="text-xs text-iron-500 font-normal">
-                  ({selectedHistory.length} sessions)
+            <div className="space-y-4 card-enter">
+              <h2 className="text-lg font-display font-semibold text-iron-100 flex items-center gap-2.5">
+                <span className="w-1.5 h-5 rounded-full bg-gradient-to-b from-fire-500 to-pump-500" />
+                {selectedExercise}
+                <span className="text-[10px] text-iron-500 font-normal uppercase tracking-wider ml-auto">
+                  {selectedHistory.length} sessions
                 </span>
               </h2>
 
               {/* Progress cards */}
-              <div className="space-y-3">
+              <div className="space-y-3 stagger-children">
                 {selectedHistory.map((session, i) => {
                   const volumeDiff = getVolumeDiff(selectedHistory, i);
                   const weightDiff = getWeightDiff(selectedHistory, i);
@@ -164,7 +161,7 @@ export default function ExerciseProgress() {
                   return (
                     <div
                       key={session.date + i}
-                      className="bg-iron-800 rounded-2xl border border-iron-600/40 p-4 space-y-3"
+                      className="glass rounded-2xl border border-white/[0.04] p-4 space-y-3 hover:border-white/[0.08] transition-all duration-300"
                     >
                       {/* Date & workout context */}
                       <div className="flex items-center justify-between">
@@ -172,48 +169,50 @@ export default function ExerciseProgress() {
                           <p className="text-sm font-semibold text-iron-100">
                             {session.displayDate}
                           </p>
-                          <p className="text-xs text-iron-500 truncate max-w-[200px]">
+                          <p className="text-[10px] text-iron-500 truncate max-w-[200px] mt-0.5 uppercase tracking-wider">
                             {session.workoutDay}
                           </p>
                         </div>
                         {i === 0 && selectedHistory.length > 1 && (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-fire-500/15 text-fire-400 font-medium">
+                          <span className="text-[10px] px-2.5 py-1 rounded-lg bg-fire-500/15 text-fire-400 font-semibold uppercase tracking-wider border border-fire-500/20">
                             Latest
                           </span>
                         )}
                       </div>
 
                       {/* Sets grid */}
-                      <div className="grid grid-cols-[auto_1fr_1fr] gap-x-4 gap-y-1 text-xs pl-1">
-                        <span className="text-iron-500 font-medium">Set</span>
-                        <span className="text-iron-500 font-medium">Weight</span>
-                        <span className="text-iron-500 font-medium">Reps</span>
-                        {session.sets.map((s, si) => (
-                          <>
-                            <span key={`n${si}`} className="text-iron-500">{si + 1}</span>
-                            <span key={`w${si}`} className="text-iron-200">{s.weight} kg</span>
-                            <span key={`r${si}`} className="text-iron-200">{s.reps}</span>
-                          </>
-                        ))}
+                      <div className="bg-iron-800/50 rounded-xl p-3 border border-white/[0.03]">
+                        <div className="grid grid-cols-[auto_1fr_1fr] gap-x-4 gap-y-1.5 text-xs">
+                          <span className="text-iron-500 font-semibold text-[10px] uppercase tracking-wider">Set</span>
+                          <span className="text-iron-500 font-semibold text-[10px] uppercase tracking-wider">Weight</span>
+                          <span className="text-iron-500 font-semibold text-[10px] uppercase tracking-wider">Reps</span>
+                          {session.sets.map((s, si) => (
+                            <>
+                              <span key={`n${si}`} className="text-iron-500">{si + 1}</span>
+                              <span key={`w${si}`} className="text-iron-200 font-medium">{s.weight} kg</span>
+                              <span key={`r${si}`} className="text-iron-200 font-medium">{s.reps}</span>
+                            </>
+                          ))}
+                        </div>
                       </div>
 
-                      {/* Comparison badges */}
-                      <div className="flex flex-wrap gap-2 pt-1">
-                        <span className="text-xs text-iron-400">
+                      {/* Stat badges */}
+                      <div className="flex flex-wrap gap-2">
+                        <span className="text-[11px] text-iron-400 bg-iron-700/40 px-2.5 py-1 rounded-lg">
                           Vol: <span className="text-iron-200 font-medium">{session.totalVolume.toLocaleString()} kg</span>
                         </span>
-                        <span className="text-xs text-iron-400">
-                          Best: <span className="text-iron-200 font-medium">{session.bestSet.weight} kg × {session.bestSet.reps}</span>
+                        <span className="text-[11px] text-iron-400 bg-iron-700/40 px-2.5 py-1 rounded-lg">
+                          Best: <span className="text-iron-200 font-medium">{session.bestSet.weight}kg × {session.bestSet.reps}</span>
                         </span>
 
                         {volumeDiff !== null && (
                           <span
-                            className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                            className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg border ${
                               volumeDiff > 0
-                                ? 'bg-success-500/15 text-success-400'
+                                ? 'bg-success-500/10 text-success-400 border-success-500/20'
                                 : volumeDiff < 0
-                                ? 'bg-danger-500/15 text-danger-400'
-                                : 'bg-iron-600/30 text-iron-400'
+                                ? 'bg-danger-500/10 text-danger-400 border-danger-500/20'
+                                : 'bg-iron-600/30 text-iron-400 border-iron-500/20'
                             }`}
                           >
                             Vol {volumeDiff > 0 ? '↑' : volumeDiff < 0 ? '↓' : '='}{' '}
@@ -223,10 +222,10 @@ export default function ExerciseProgress() {
 
                         {weightDiff !== null && weightDiff !== 0 && (
                           <span
-                            className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                            className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg border ${
                               weightDiff > 0
-                                ? 'bg-success-500/15 text-success-400'
-                                : 'bg-danger-500/15 text-danger-400'
+                                ? 'bg-success-500/10 text-success-400 border-success-500/20'
+                                : 'bg-danger-500/10 text-danger-400 border-danger-500/20'
                             }`}
                           >
                             Top {weightDiff > 0 ? '↑' : '↓'} {Math.abs(weightDiff)} kg
